@@ -1,0 +1,82 @@
+name: rail_one
+description: "Knock Off of Rail One"
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_bloc: ^8.1.5        
+
+  # Navigation
+  go_router: ^13.0.0
+
+  # Networking
+  dio: ^5.4.0
+  retrofit: ^4.1.0
+
+  # Dependency Injection
+  get_it: ^7.6.7
+  injectable: ^2.3.2
+
+  # Data / Serialization
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+
+  # Local Storage
+  hive_flutter: ^1.1.0        
+
+  # Utilities
+  dartz: ^0.10.1            
+  equatable: ^2.0.5
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.8
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
+  injectable_generator: ^2.4.1
+  mocktail: ^1.0.0  
+  
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/
+    - assets/animations/
+    - assets/translations/
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/notosans/NotoSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/notosans/NotoSans-Medium.ttf
+          weight: 500 
+        - asset: assets/fonts/notosans/NotoSans-Regular.ttf
+          weight: 400
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter/Inter-Bold.ttf
+          weight: 700
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/poppins/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/poppins/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/poppins/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/poppins/Poppins-Light.ttf
+          weight: 300
+
+
