@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rail_one/core/di/injection.dart';
+import 'package:rail_one/core/storage/local_storage_service.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 import 'package:rail_one/presentation/auth/pages/login_page.dart';
+import 'package:rail_one/presentation/auth/pages/mpin_login_page.dart';
 import 'package:rail_one/presentation/home/pages/home_page.dart';
 import 'package:rail_one/presentation/home/widgets/home_header.dart';
 
@@ -53,10 +56,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
     );
   }
 
-  void _goToLogin() {
+  Future<void> _goToLogin() async {
+    final hasStoredUser = await sl<LocalStorageService>().hasStoredUser();
+    if (!mounted) return;
+
+    final destination = hasStoredUser
+        ? const MpinLoginPage()
+        : const LoginPage();
+
     Navigator.of(
       context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const LoginPage()));
+    ).push(MaterialPageRoute<void>(builder: (_) => destination));
   }
 
   @override

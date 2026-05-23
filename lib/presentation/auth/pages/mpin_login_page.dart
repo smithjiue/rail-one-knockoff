@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rail_one/core/auth/biometric_auth_service.dart';
 import 'package:rail_one/core/di/injection.dart';
 import 'package:rail_one/core/storage/local_storage_service.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
@@ -20,7 +21,7 @@ class MpinLoginPage extends StatefulWidget {
 class _MpinLoginPageState extends State<MpinLoginPage> {
   String? _userName;
   String _mpin = '';
-  bool _isVerifying = false;
+  bool _authInProgress = false;
   int _mpinInputKey = 0;
 
   @override
@@ -54,27 +55,67 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
     await _submitLogin();
   }
 
-  Future<void> _submitLogin() async {
-    if (_mpin.length != 6 || _isVerifying) return;
+  Future<void> _loginWithBiometric() async {
+    if (_authInProgress) return;
+    _authInProgress = true;
+    try {
+      final result = await sl<BiometricAuthService>().authenticate(
+        localizedReason: 'Authenticate to sign in to RailOne',
+      );
+      if (!mounted) return;
 
-    setState(() => _isVerifying = true);
-    final valid = await sl<LocalStorageService>().verifyMpin(_mpin);
-    if (!mounted) return;
-    setState(() => _isVerifying = false);
-
-    if (valid) {
-      _goHome();
-      return;
+      switch (result.status) {
+        case BiometricAuthStatus.success:
+          _goHome();
+        case BiometricAuthStatus.canceled:
+          break;
+        case BiometricAuthStatus.notEnrolled:
+          await showAuthValidationDialog(
+            context,
+            message:
+                'No fingerprint or face unlock is set up on this device. '
+                'Add biometrics in device settings, then try again.',
+          );
+        case BiometricAuthStatus.notAvailable:
+          await showAuthValidationDialog(
+            context,
+            message: 'Biometric login is not available on this device.',
+          );
+        case BiometricAuthStatus.failed:
+          await showAuthValidationDialog(
+            context,
+            message: 'Could not open biometric login. Please try again.',
+          );
+      }
+    } finally {
+      _authInProgress = false;
     }
+  }
 
-    await showAuthValidationDialog(
-      context,
-      message: 'Incorrect mPIN. Please try again.',
-    );
-    setState(() {
-      _mpin = '';
-      _mpinInputKey++;
-    });
+  Future<void> _submitLogin() async {
+    if (_mpin.length != 6 || _authInProgress) return;
+
+    _authInProgress = true;
+    try {
+      final valid = await sl<LocalStorageService>().verifyMpin(_mpin);
+      if (!mounted) return;
+
+      if (valid) {
+        _goHome();
+        return;
+      }
+
+      await showAuthValidationDialog(
+        context,
+        message: 'Incorrect mPIN. Please try again.',
+      );
+      setState(() {
+        _mpin = '';
+        _mpinInputKey++;
+      });
+    } finally {
+      _authInProgress = false;
+    }
   }
 
   Future<void> _switchUser() async {
@@ -109,8 +150,9 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Center(child: RailOneLogo(useTextLogo: true, height: 44)),
-                const SizedBox(height: 40),
+                const SizedBox(height: 10),
+                const Center(child: RailOneLogo(height: 44)),
+                const SizedBox(height: 80),
                 const Text(
                   'Login using mPIN',
                   textAlign: TextAlign.center,
@@ -122,7 +164,7 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
                     height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 20),
                 Text(
                   'Welcome $greetingName!',
                   textAlign: TextAlign.center,
@@ -134,7 +176,7 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
                     height: 1.3,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 20),
                 const Text(
                   'Enter mPIN below',
                   textAlign: TextAlign.center,
@@ -201,20 +243,17 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
                       children: [
                         _BiometricIconButton(
                           imageAsset: 'assets/images/Face_ID_logo.png',
-                          onTap: _submitLogin,
+                          onTap: _loginWithBiometric,
                         ),
                         const SizedBox(width: 16),
                         _BiometricIconButton(
                           icon: Icons.fingerprint_rounded,
-                          onTap: _submitLogin,
+                          onTap: _loginWithBiometric,
                         ),
                       ],
                     ),
                     const Spacer(),
-                    _MpinLoginButton(
-                      isLoading: _isVerifying,
-                      onPressed: _mpin.length == 6 ? _submitLogin : null,
-                    ),
+                    _MpinLoginButton(onPressed: () => _loginWithBiometric()),
                   ],
                 ),
                 const SizedBox(height: 36),
@@ -282,24 +321,9 @@ class _DottedLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const dotWidth = 4.0;
-        const gap = 4.0;
-        final count = (constraints.maxWidth / (dotWidth + gap)).floor();
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            count.clamp(1, 40),
-            (_) => Container(
-              width: dotWidth,
-              height: 1.5,
-              margin: const EdgeInsets.only(right: gap),
-              color: AppColors.authHint.withValues(alpha: 0.5),
-            ),
-          ),
-        );
-      },
+    return Container(
+      height: 1,
+      color: AppColors.authHint.withValues(alpha: 0.5),
     );
   }
 }
@@ -344,39 +368,35 @@ class _BiometricIconButton extends StatelessWidget {
 }
 
 class _MpinLoginButton extends StatelessWidget {
-  const _MpinLoginButton({required this.onPressed, required this.isLoading});
+  const _MpinLoginButton({required this.onPressed});
 
-  final VoidCallback? onPressed;
-  final bool isLoading;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.authRegisterButton,
-      borderRadius: BorderRadius.circular(24),
+      color: Colors.transparent,
       child: InkWell(
-        onTap: isLoading ? null : onPressed,
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-          child: isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.authPrimaryDark,
-                  ),
-                )
-              : const Text(
-                  'Login',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.authPrimaryDark,
-                  ),
-                ),
+        onTap: onPressed,
+        customBorder: const StadiumBorder(),
+        splashColor: AppColors.authPrimary.withValues(alpha: 0.12),
+        child: Ink(
+          decoration: ShapeDecoration(
+            color: AppColors.authRegistrationCard,
+            shape: StadiumBorder(side: BorderSide(color: AppColors.authLink)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 8),
+            child: const Text(
+              'Login',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.authLink,
+              ),
+            ),
+          ),
         ),
       ),
     );

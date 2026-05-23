@@ -119,15 +119,31 @@ class LocalStorageService {
   Future<String?> getRegisteredUserId() =>
       _prefs.getString(PrefsKeys.registeredUserId);
 
+  /// True when a user record exists in prefs, secure storage, or the local DB.
   Future<bool> hasStoredUser() async {
-    if (!await isLoggedIn()) return false;
     final profile = await getUserProfile();
-    if (profile != null) return true;
+    if (profile != null &&
+        (profile.id.isNotEmpty || profile.displayName.isNotEmpty)) {
+      return true;
+    }
+
     final name = await getRegisteredName();
     final userId = await getRegisteredUserId();
-    return (name != null && name.isNotEmpty) ||
-        (userId != null && userId.isNotEmpty);
+    final mobile = await _prefs.getString(PrefsKeys.registeredMobile);
+    final email = await _prefs.getString(PrefsKeys.registeredEmail);
+    if (_hasText(name) ||
+        _hasText(userId) ||
+        _hasText(mobile) ||
+        _hasText(email)) {
+      return true;
+    }
+
+    final secureUserId = await getUserId();
+    return _hasText(secureUserId);
   }
+
+  bool _hasText(String? value) =>
+      value != null && value.trim().isNotEmpty;
 
   Future<void> saveMpin(String mpin) =>
       _securePrefs.write(SecureKeys.mpin, mpin);

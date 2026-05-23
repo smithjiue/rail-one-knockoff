@@ -39,6 +39,7 @@ dependencies:
   equatable: ^2.0.5
   flutter_svg: ^2.0.17
   vector_graphics: ^1.1.19
+  local_auth: ^3.0.1
 
 
 

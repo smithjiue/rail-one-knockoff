@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:rail_one/core/auth/biometric_auth_service.dart';
 import 'package:rail_one/core/storage/db/app_local_database.dart';
 import 'package:rail_one/core/storage/db/hive_local_database.dart';
 import 'package:rail_one/core/storage/local_storage_service.dart';
@@ -29,6 +30,8 @@ Future<void> configureDependencies() async {
       database: sl<AppLocalDatabase>(),
     ),
   );
+
+  sl.registerLazySingleton<BiometricAuthService>(BiometricAuthService.new);
 }
 
 /// Closes Hive boxes. Call on app dispose if needed.

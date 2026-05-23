@@ -63,11 +63,24 @@ void main() {
       );
 
       expect(await storage.isLoggedIn(), isTrue);
+      expect(await storage.hasStoredUser(), isTrue);
       expect(await storage.getRegisteredName(), 'Smith Jiue');
       expect(await storage.getUserId(), 'smith_j');
       expect(await storage.getStoredPassword(), 'secret12');
       expect((await storage.getUserProfile())?.displayName, 'Smith Jiue');
       expect(await storage.hasActiveSession(), isTrue);
+    });
+
+    test('hasStoredUser is false with no persisted user', () async {
+      expect(await storage.hasStoredUser(), isFalse);
+    });
+
+    test('hasStoredUser is true with only hive profile', () async {
+      await storage.saveUserProfile(
+        const LocalUserProfile(id: 'u1', displayName: 'Smith'),
+      );
+
+      expect(await storage.hasStoredUser(), isTrue);
     });
 
     test('clearSession removes secure and user data', () async {

@@ -6,13 +6,26 @@ import 'package:rail_one/presentation/auth/pages/mpin_login_page.dart';
 import 'package:rail_one/presentation/auth/pages/registration_page.dart';
 
 /// Resolves the first screen from persisted user/session state.
-class AppStartPage extends StatelessWidget {
+class AppStartPage extends StatefulWidget {
   const AppStartPage({super.key});
+
+  @override
+  State<AppStartPage> createState() => _AppStartPageState();
+}
+
+class _AppStartPageState extends State<AppStartPage> {
+  late final Future<bool> _hasStoredUserFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasStoredUserFuture = sl<LocalStorageService>().hasStoredUser();
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: sl<LocalStorageService>().hasStoredUser(),
+      future: _hasStoredUserFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(

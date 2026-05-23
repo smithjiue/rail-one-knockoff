@@ -3,10 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 
 class MpinInputRow extends StatefulWidget {
-  const MpinInputRow({super.key, required this.onCompleted, this.length = 6});
+  const MpinInputRow({
+    super.key,
+    required this.onCompleted,
+    this.length = 6,
+    this.autofocus = false,
+  });
 
   final ValueChanged<String> onCompleted;
   final int length;
+  final bool autofocus;
 
   @override
   State<MpinInputRow> createState() => _MpinInputRowState();
@@ -92,7 +98,7 @@ class _MpinInputRowState extends State<MpinInputRow> {
               focusNode: _focusNode,
               keyboardType: TextInputType.number,
               maxLength: widget.length,
-              autofocus: true,
+              autofocus: widget.autofocus,
               obscureText: true,
               obscuringCharacter: '•',
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
