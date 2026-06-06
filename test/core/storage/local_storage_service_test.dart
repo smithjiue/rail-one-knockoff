@@ -200,15 +200,13 @@ final class _FakeDatabase implements AppLocalDatabase {
   Future<Map<String, dynamic>?> getJson({
     required String boxName,
     required String key,
-  }) async =>
-      _json['$boxName:$key'];
+  }) async => _json['$boxName:$key'];
 
   @override
   Future<List<Map<String, dynamic>>> getJsonList({
     required String boxName,
     required String key,
-  }) async =>
-      _lists['$boxName:$key'] ?? const [];
+  }) async => _lists['$boxName:$key'] ?? const [];
 
   @override
   Future<void> init() async {}

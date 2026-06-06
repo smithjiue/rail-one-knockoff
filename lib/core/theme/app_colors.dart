@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
+  static const primary = Color(0xFF0166FF);
   static const background = Color(0xFFFFFFFF);
   static const heading = Color(0xFF0B2E59);
   static const bodyText = Color(0xFF4A5568);
   static const logoDark = Color(0xFF1A1A1A);
   static const logoMuted = Color(0xFF6B7280);
-  static const navBar = Color(0xFF0078D4);
   static const greeting = Color(0xFF0B2E59);
   static const borderLight = Color(0xFFE5E7EB);
   static const journeyCardBg = Color(0xFFE8F1FA);
@@ -15,6 +15,7 @@ abstract final class AppColors {
   static const ticketButtonGradientStart = Color(0xFFBC7FD4);
   static const ticketButtonGradientEnd = Color(0xFF4E2F7A);
   static const unreservedGreen = Color(0xFF8FE8A8);
+  static const cyanBlue = Color(0xFF2B96CB);
 
   static const offeringPink = Color(0xFFFFEFEF);
   static const offeringGreen = Color(0xFFE9FFE8);

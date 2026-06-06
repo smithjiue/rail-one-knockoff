@@ -119,6 +119,73 @@ class LocalStorageService {
   Future<String?> getRegisteredUserId() =>
       _prefs.getString(PrefsKeys.registeredUserId);
 
+  Future<String?> getRegisteredMobile() =>
+      _prefs.getString(PrefsKeys.registeredMobile);
+
+  /// Verifies user ID or mobile and password against stored credentials.
+  /// Returns null on success; otherwise an error message for the UI.
+  Future<String?> loginWithPassword({
+    required String identifier,
+    required String password,
+  }) async {
+    final id = identifier.trim();
+    if (id.isEmpty || password.isEmpty) {
+      return 'Please enter User ID / mobile number and password';
+    }
+
+    if (!await hasStoredUser()) {
+      return 'No account found. Please sign up first.';
+    }
+
+    final storedUserId = (await getRegisteredUserId())?.trim();
+    final storedMobile = (await getRegisteredMobile())?.trim();
+    final profile = await getUserProfile();
+    final storedPassword = await getStoredPassword();
+
+    if (storedPassword == null || storedPassword.isEmpty) {
+      return 'No account found. Please sign up first.';
+    }
+
+    if (!_identifierMatches(
+      id,
+      storedUserId: storedUserId,
+      storedMobile: storedMobile,
+      profile: profile,
+    )) {
+      return 'User ID or mobile number does not match';
+    }
+
+    if (storedPassword != password) {
+      return 'Incorrect password. Please try again.';
+    }
+
+    final userId = storedUserId ?? profile?.id ?? id;
+    await Future.wait([
+      setLoggedIn(true),
+      _securePrefs.write(SecureKeys.password, password),
+      saveAuthSession(
+        accessToken: 'local_session_$userId',
+        refreshToken: 'local_refresh_$userId',
+        userId: userId,
+      ),
+    ]);
+    return null;
+  }
+
+  bool _identifierMatches(
+    String identifier, {
+    String? storedUserId,
+    String? storedMobile,
+    LocalUserProfile? profile,
+  }) {
+    if (storedUserId != null && identifier == storedUserId) return true;
+    if (storedMobile != null && identifier == storedMobile) return true;
+    if (profile == null) return false;
+    if (identifier == profile.id.trim()) return true;
+    final mobile = profile.mobile?.trim();
+    return mobile != null && identifier == mobile;
+  }
+
   /// True when a user record exists in prefs, secure storage, or the local DB.
   Future<bool> hasStoredUser() async {
     final profile = await getUserProfile();
@@ -142,8 +209,7 @@ class LocalStorageService {
     return _hasText(secureUserId);
   }
 
-  bool _hasText(String? value) =>
-      value != null && value.trim().isNotEmpty;
+  bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
 
   Future<void> saveMpin(String mpin) =>
       _securePrefs.write(SecureKeys.mpin, mpin);

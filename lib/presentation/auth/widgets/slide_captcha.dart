@@ -170,14 +170,6 @@ class CaptchaActionRow extends StatelessWidget {
   final bool showAudio;
   final VoidCallback? onAudio;
 
-  static const _linkStyle = TextStyle(
-    fontFamily: 'Poppins',
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: AppColors.authLink,
-    height: 1.2,
-  );
-
   @override
   Widget build(BuildContext context) {
     final refreshButton = TextButton(

@@ -19,19 +19,7 @@ Future<void> showAuthValidationDialog(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.authError.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.warning_rounded,
-                  color: AppColors.authError,
-                  size: 36,
-                ),
-              ),
+              Icon(Icons.warning_rounded, color: AppColors.authError, size: 56),
               const SizedBox(height: 20),
               Text(
                 message,
@@ -46,15 +34,15 @@ Future<void> showAuthValidationDialog(
               ),
               const SizedBox(height: 24),
               SizedBox(
-                width: double.infinity,
+                width: 140,
                 child: Material(
-                  color: AppColors.authPrimary,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(28),
                   child: InkWell(
                     onTap: () => Navigator.of(dialogContext).pop(),
                     borderRadius: BorderRadius.circular(28),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
+                      padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'OK',
                         textAlign: TextAlign.center,

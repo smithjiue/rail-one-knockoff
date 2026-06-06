@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 
 class HomeBottomNav extends StatelessWidget {
-  const HomeBottomNav({
-    super.key,
-    this.currentIndex = 0,
-    this.onTap,
-  });
+  const HomeBottomNav({super.key, this.currentIndex = 0, this.onTap});
 
   final int currentIndex;
   final ValueChanged<int>? onTap;
@@ -22,7 +18,7 @@ class HomeBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.navBar,
+        color: AppColors.primary,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(4),
           topRight: Radius.circular(4),
@@ -45,7 +41,9 @@ class HomeBottomNav extends StatelessWidget {
                       Icon(
                         item.icon,
                         size: 24,
-                        color: Colors.white.withValues(alpha: isSelected ? 1 : 0.85),
+                        color: Colors.white.withValues(
+                          alpha: isSelected ? 1 : 0.85,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -53,8 +51,12 @@ class HomeBottomNav extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: Colors.white.withValues(alpha: isSelected ? 1 : 0.9),
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: Colors.white.withValues(
+                            alpha: isSelected ? 1 : 0.9,
+                          ),
                         ),
                       ),
                     ],

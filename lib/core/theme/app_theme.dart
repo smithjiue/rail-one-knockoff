@@ -8,7 +8,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       fontFamily: 'Poppins',
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.navBar,
+        seedColor: AppColors.primary,
         surface: AppColors.background,
       ),
       textTheme: const TextTheme(

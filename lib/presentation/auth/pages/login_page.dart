@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rail_one/core/di/injection.dart';
+import 'package:rail_one/core/storage/local_storage_service.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 import 'package:rail_one/presentation/auth/pages/create_account_page.dart';
 import 'package:rail_one/presentation/auth/widgets/auth_page_header.dart';
@@ -21,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   final _userIdController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _loginInProgress = false;
   int _captchaSeed = 0;
 
   @override
@@ -41,6 +44,29 @@ class _LoginPageState extends State<LoginPage> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const HomePage()),
     );
+  }
+
+  Future<void> _onPasswordLogin() async {
+    if (_loginInProgress) return;
+
+    _loginInProgress = true;
+    try {
+      final error = await sl<LocalStorageService>().loginWithPassword(
+        identifier: _userIdController.text,
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+
+      if (error == null) {
+        _goHome();
+        return;
+      }
+
+      setState(() => _captchaSeed++);
+      await showAuthValidationDialog(context, message: error);
+    } finally {
+      _loginInProgress = false;
+    }
   }
 
   void _goToCreateAccount() {
@@ -134,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 14),
                       SlideCaptcha(
                         key: ValueKey(_captchaSeed),
-                        onMatched: _goHome,
+                        onMatched: _onPasswordLogin,
                         onMismatch: _onCaptchaMismatch,
                       ),
                       const SizedBox(height: 12),
