@@ -10,6 +10,8 @@ abstract final class PrefsKeys {
   static const registeredMobile = 'registered_mobile';
   static const registeredEmail = 'registered_email';
   static const registeredUserId = 'registered_user_id';
+  static const rWalletBalance = 'r_wallet_balance';
+  static const biometricLoginEnabled = 'biometric_login_enabled';
 }
 
 /// Secure storage keys (tokens and secrets).
@@ -32,4 +34,5 @@ abstract final class HiveBoxes {
 abstract final class HiveRecordKeys {
   static const userProfile = 'user_profile';
   static const homeCache = 'home_cache';
+  static String userBookings(String userId) => 'user_bookings_$userId';
 }

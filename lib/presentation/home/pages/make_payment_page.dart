@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:rail_one/core/di/injection.dart';
+import 'package:rail_one/core/storage/local_storage_service.dart';
+import 'package:rail_one/core/storage/models/stored_booking.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
+import 'package:rail_one/presentation/home/pages/my_bookings_page.dart';
+import 'package:rail_one/presentation/home/widgets/booking_success_dialog.dart';
 
 enum _PaymentMethod { rWallet, upi, other }
 
@@ -10,11 +15,13 @@ class MakePaymentPage extends StatefulWidget {
     super.key,
     required this.routeLabel,
     required this.payAmount,
+    required this.bookingDetails,
     this.discountPercent = 3,
   });
 
   final String routeLabel;
   final double payAmount;
+  final TicketBookingDraft bookingDetails;
   final int discountPercent;
 
   @override
@@ -24,6 +31,7 @@ class MakePaymentPage extends StatefulWidget {
 class _MakePaymentPageState extends State<MakePaymentPage> {
   _PaymentMethod? _selectedPaymentMethod;
   bool _reviewExpanded = false;
+  bool _isProcessing = false;
 
   String get _formattedPayAmount => _effectivePayAmount.toStringAsFixed(2);
 
@@ -32,6 +40,39 @@ class _MakePaymentPageState extends State<MakePaymentPage> {
 
   double get _effectivePayAmount =>
       _selectedPaymentMethod != null ? _discountedAmount : widget.payAmount;
+
+  String get _paymentMethodLabel => switch (_selectedPaymentMethod) {
+    _PaymentMethod.upi => 'UPI',
+    _PaymentMethod.rWallet => 'R-Wallet',
+    _ => 'Other Methods',
+  };
+
+  Future<void> _completePayment() async {
+    if (_selectedPaymentMethod == null || _isProcessing) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      await sl<LocalStorageService>().saveBookingFromPayment(
+        draft: widget.bookingDetails,
+        paidAmount: _effectivePayAmount,
+        paymentMethod: _paymentMethodLabel,
+      );
+
+      if (!mounted) return;
+      await showBookingSuccessDialog(
+        context,
+        isSeasonTicket: widget.bookingDetails.isSeasonTicket,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      await Navigator.of(
+        context,
+      ).push<void>(MaterialPageRoute(builder: (_) => const MyBookingsPage()));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   void _selectPaymentMethod(_PaymentMethod method) {
     setState(() {
@@ -421,21 +462,32 @@ class _MakePaymentPageState extends State<MakePaymentPage> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(24),
                   child: InkWell(
-                    onTap: _selectedPaymentMethod == null ? null : () {},
+                    onTap: _selectedPaymentMethod == null || _isProcessing
+                        ? null
+                        : _completePayment,
                     borderRadius: BorderRadius.circular(24),
                     child: Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(vertical: 8),
                       alignment: Alignment.center,
-                      child: Text(
-                        'Pay Using ${_selectedPaymentMethod == _PaymentMethod.upi ? 'UPI' : 'Other Methods'}',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: _isProcessing
+                          ? SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Pay Using $_paymentMethodLabel',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                 ),

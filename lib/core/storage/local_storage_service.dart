@@ -1,5 +1,6 @@
 import 'package:rail_one/core/storage/db/app_local_database.dart';
 import 'package:rail_one/core/storage/models/local_user_profile.dart';
+import 'package:rail_one/core/storage/models/stored_booking.dart';
 import 'package:rail_one/core/storage/prefs/app_prefs.dart';
 import 'package:rail_one/core/storage/prefs/secure_prefs.dart';
 import 'package:rail_one/core/storage/storage_keys.dart';
@@ -121,6 +122,21 @@ class LocalStorageService {
 
   Future<String?> getRegisteredMobile() =>
       _prefs.getString(PrefsKeys.registeredMobile);
+
+  Future<String?> getRegisteredEmail() =>
+      _prefs.getString(PrefsKeys.registeredEmail);
+
+  Future<double> getRWalletBalance() async =>
+      (await _prefs.getDouble(PrefsKeys.rWalletBalance)) ?? 0;
+
+  Future<void> setRWalletBalance(double balance) =>
+      _prefs.setDouble(PrefsKeys.rWalletBalance, balance);
+
+  Future<bool> isBiometricLoginEnabled() =>
+      _prefs.getBool(PrefsKeys.biometricLoginEnabled, defaultValue: false);
+
+  Future<void> setBiometricLoginEnabled(bool enabled) =>
+      _prefs.setBool(PrefsKeys.biometricLoginEnabled, enabled);
 
   /// Verifies user ID or mobile and password against stored credentials.
   /// Returns null on success; otherwise an error message for the UI.
@@ -260,6 +276,65 @@ class LocalStorageService {
         .map((e) => e['station'] as String?)
         .whereType<String>()
         .toList(growable: false);
+  }
+
+  Future<String> _resolveCurrentUserId() async {
+    final userId = await getRegisteredUserId();
+    if (_hasText(userId)) return userId!.trim();
+    final secureId = await getUserId();
+    if (_hasText(secureId)) return secureId!.trim();
+    final profile = await getUserProfile();
+    if (profile != null && _hasText(profile.id)) return profile.id.trim();
+    return 'guest';
+  }
+
+  Future<StoredBooking> saveBookingFromPayment({
+    required TicketBookingDraft draft,
+    required double paidAmount,
+    required String paymentMethod,
+  }) async {
+    final userId = await _resolveCurrentUserId();
+    final booking = StoredBooking.fromPayment(
+      draft: draft,
+      userId: userId,
+      paidAmount: paidAmount,
+      paymentMethod: paymentMethod,
+    );
+
+    final existing = await _readBookingsForUser(userId);
+    final updated = [booking, ...existing];
+    await _database.putJsonList(
+      boxName: HiveBoxes.cache,
+      key: HiveRecordKeys.userBookings(userId),
+      value: updated.map((b) => b.toJson()).toList(growable: false),
+    );
+    return booking;
+  }
+
+  Future<List<StoredBooking>> getActiveBookings() async {
+    final userId = await _resolveCurrentUserId();
+    final all = await _readBookingsForUser(userId);
+    final now = DateTime.now();
+    final active = all.where((b) => !now.isAfter(b.expiresAt)).toList()
+      ..sort((a, b) => b.bookedAt.compareTo(a.bookedAt));
+
+    if (active.length != all.length) {
+      await _database.putJsonList(
+        boxName: HiveBoxes.cache,
+        key: HiveRecordKeys.userBookings(userId),
+        value: active.map((b) => b.toJson()).toList(growable: false),
+      );
+    }
+
+    return active;
+  }
+
+  Future<List<StoredBooking>> _readBookingsForUser(String userId) async {
+    final rows = await _database.getJsonList(
+      boxName: HiveBoxes.cache,
+      key: HiveRecordKeys.userBookings(userId),
+    );
+    return rows.map(StoredBooking.fromJson).toList(growable: false);
   }
 
   Future<void> clearSession() async {

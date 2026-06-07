@@ -40,6 +40,8 @@ dependencies:
   flutter_svg: ^2.0.17
   vector_graphics: ^1.1.19
   local_auth: ^3.0.1
+  qr_flutter: ^4.1.0
+  encrypt: ^5.0.3
 
 
 

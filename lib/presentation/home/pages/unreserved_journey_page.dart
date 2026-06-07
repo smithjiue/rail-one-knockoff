@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rail_one/core/storage/models/stored_booking.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 import 'package:rail_one/core/utils/fare_calculator.dart';
 import 'package:rail_one/presentation/home/pages/make_payment_page.dart';
@@ -452,18 +453,53 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
     );
   }
 
+  String _seasonDurationLabel() => switch (_duration) {
+    _SeasonDuration.monthly => 'MONTHLY',
+    _SeasonDuration.quarterly => 'QUARTERLY',
+    _SeasonDuration.halfYearly => 'HALF YEARLY',
+    _SeasonDuration.yearly => 'YEARLY',
+  };
+
   void _openMakePaymentPage({
+    required String sourceName,
     required String sourceCode,
+    required String destinationName,
     required String destinationCode,
     required int totalFare,
+    required double distanceKm,
   }) {
     const discountPercent = 3;
+    final draft = TicketBookingDraft(
+      sourceStationName: sourceName,
+      sourceStationCode: sourceCode,
+      destinationStationName: destinationName,
+      destinationStationCode: destinationCode,
+      distanceKm: distanceKm,
+      fullFare: totalFare.toDouble(),
+      isSeasonTicket: widget.isSeasonTicket,
+      trainTypeLabel: _trainType == _TrainType.acEmu
+          ? 'AC EMU TRAIN'
+          : 'ORDINARY',
+      travelClassLabel: _travelClass == _TravelClass.first ? 'FIRST' : 'SECOND',
+      ticketTypeLabel: widget.isSeasonTicket
+          ? _seasonDurationLabel()
+          : (_ticketType == _JourneyTicketType.returnTicket
+                ? 'RETURN'
+                : 'JOURNEY'),
+      adultCount: _adultCount,
+      childCount: _childCount,
+      seasonDurationLabel: widget.isSeasonTicket
+          ? _seasonDurationLabel()
+          : null,
+      discountPercent: discountPercent,
+    );
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => MakePaymentPage(
           routeLabel: '$sourceCode → $destinationCode',
           payAmount: totalFare.toDouble(),
+          bookingDetails: draft,
           discountPercent: discountPercent,
         ),
       ),
@@ -479,6 +515,11 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
       widget.destinationStation,
     );
     final int totalFare = _calculateFare();
+    final routeResult = FareCalculatorService.instance.calculate(
+      source.code,
+      destination.code,
+    );
+    final distanceKm = routeResult?.totalDistanceKm ?? 0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
@@ -834,9 +875,12 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
                   borderRadius: BorderRadius.circular(24),
                   child: InkWell(
                     onTap: () => _openMakePaymentPage(
+                      sourceName: source.name,
                       sourceCode: source.code,
+                      destinationName: destination.name,
                       destinationCode: destination.code,
                       totalFare: totalFare,
+                      distanceKm: distanceKm,
                     ),
                     borderRadius: BorderRadius.circular(24),
                     child: Container(
