@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 import 'package:rail_one/core/utils/fare_calculator.dart';
+import 'package:rail_one/presentation/home/pages/make_payment_page.dart';
 
 enum _TrainType { ordinary, acEmu }
 
@@ -81,6 +82,15 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
     });
   }
 
+  void _selectTrainType(_TrainType trainType) {
+    setState(() {
+      _trainType = trainType;
+      if (trainType == _TrainType.acEmu) {
+        _travelClass = _TravelClass.first;
+      }
+    });
+  }
+
   int _calculateFare() {
     final srcCode = UnreservedJourneyPage.parseStationField(
       widget.sourceStation,
@@ -91,33 +101,36 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
 
     final result = FareCalculatorService.instance.calculate(srcCode, destCode);
     // Base second-class fare from the graph route.
-    final int baseFare = result?.secondClassFare ?? 5;
-
-    double multiplier = 1.0;
+    int baseFare = result?.secondClassFare ?? 5;
     if (_travelClass == _TravelClass.first) {
-      multiplier *= 10.0;
+      baseFare = result?.firstClassFare ?? 5;
     }
     if (_trainType == _TrainType.acEmu) {
-      // AC EMU has no second class — it is always first-class equivalent * 1.3x.
-      multiplier = (_travelClass == _TravelClass.second)
-          ? 10.0 * 1.3
-          : (multiplier * 1.3);
+      baseFare = result?.acEmuFare ?? 5;
     }
-
-    final int singleAdultFare = (baseFare * multiplier).round();
-    final int singleChildFare = (singleAdultFare / 2).round();
+    final int singleChildFare = (baseFare / 2).round();
 
     if (widget.isSeasonTicket) {
-      final double seasonMultiplier = switch (_duration) {
-        _SeasonDuration.monthly => 15.0,
-        _SeasonDuration.quarterly => 15.0 * 2.7,
-        _SeasonDuration.halfYearly => 15.0 * 5.4,
-        _SeasonDuration.yearly => 15.0 * 10.8,
+      final category = switch ((_trainType, _travelClass)) {
+        (_TrainType.acEmu, _) => SeasonTravelCategory.acEmu,
+        (_, _TravelClass.first) => SeasonTravelCategory.firstClass,
+        _ => SeasonTravelCategory.secondClass,
       };
-      return (singleAdultFare * seasonMultiplier).round();
+      final duration = switch (_duration) {
+        _SeasonDuration.monthly => SeasonTicketDuration.monthly,
+        _SeasonDuration.quarterly => SeasonTicketDuration.quarterly,
+        _SeasonDuration.halfYearly => SeasonTicketDuration.halfYearly,
+        _SeasonDuration.yearly => SeasonTicketDuration.yearly,
+      };
+
+      return calculateSeasonFare(
+        sourceCode: srcCode,
+        destinationCode: destCode,
+        category: category,
+        duration: duration,
+      );
     } else {
-      int total =
-          (singleAdultFare * _adultCount) + (singleChildFare * _childCount);
+      int total = (baseFare * _adultCount) + (singleChildFare * _childCount);
       if (_ticketType == _JourneyTicketType.returnTicket) total *= 2;
       return total;
     }
@@ -439,6 +452,24 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
     );
   }
 
+  void _openMakePaymentPage({
+    required String sourceCode,
+    required String destinationCode,
+    required int totalFare,
+  }) {
+    const discountPercent = 3;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MakePaymentPage(
+          routeLabel: '$sourceCode → $destinationCode',
+          payAmount: totalFare.toDouble(),
+          discountPercent: discountPercent,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final source = UnreservedJourneyPage.parseStationField(
@@ -538,14 +569,12 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
                         _buildToggleChip(
                           label: 'ORDINARY',
                           isSelected: _trainType == _TrainType.ordinary,
-                          onTap: () =>
-                              setState(() => _trainType = _TrainType.ordinary),
+                          onTap: () => _selectTrainType(_TrainType.ordinary),
                         ),
                         _buildToggleChip(
                           label: 'AC EMU TRAIN',
                           isSelected: _trainType == _TrainType.acEmu,
-                          onTap: () =>
-                              setState(() => _trainType = _TrainType.acEmu),
+                          onTap: () => _selectTrainType(_TrainType.acEmu),
                         ),
                       ],
                     ),
@@ -663,18 +692,22 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
                     _buildOptionSection(
                       title: 'Class',
                       chips: [
-                        _buildToggleChip(
-                          label: 'SECOND',
-                          isSelected: _travelClass == _TravelClass.second,
-                          onTap: () => setState(
-                            () => _travelClass = _TravelClass.second,
+                        if (_trainType == _TrainType.ordinary)
+                          _buildToggleChip(
+                            label: 'SECOND',
+                            isSelected: _travelClass == _TravelClass.second,
+                            onTap: () => setState(
+                              () => _travelClass = _TravelClass.second,
+                            ),
                           ),
-                        ),
                         _buildToggleChip(
                           label: 'FIRST',
                           isSelected: _travelClass == _TravelClass.first,
-                          onTap: () =>
-                              setState(() => _travelClass = _TravelClass.first),
+                          onTap: _trainType == _TrainType.acEmu
+                              ? () {}
+                              : () => setState(
+                                  () => _travelClass = _TravelClass.first,
+                                ),
                         ),
                       ],
                     ),
@@ -752,8 +785,8 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.authFieldIcon,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.authPrimaryDark,
                         ),
                       ),
                       SizedBox(height: 2),
@@ -800,7 +833,11 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(24),
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () => _openMakePaymentPage(
+                      sourceCode: source.code,
+                      destinationCode: destination.code,
+                      totalFare: totalFare,
+                    ),
                     borderRadius: BorderRadius.circular(24),
                     child: Container(
                       width: double.infinity,
