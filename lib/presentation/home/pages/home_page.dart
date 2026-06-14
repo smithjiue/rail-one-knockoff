@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
           bottom: false,
           child: Column(
             children: [
-              const Expanded(
+              Expanded(
                 child: SingleChildScrollView(
                   physics: BouncingScrollPhysics(),
                   child: Column(

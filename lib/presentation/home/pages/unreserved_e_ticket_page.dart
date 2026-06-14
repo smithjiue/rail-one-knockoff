@@ -136,6 +136,14 @@ class _UnreservedETicketPageState extends State<UnreservedETicketPage> {
       _sourceController.text.trim().isNotEmpty &&
       _destinationController.text.trim().isNotEmpty;
 
+  DateTime? _seasonBookingStartDate() {
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+    return _seasonDateOption == _SeasonDateOption.nextDate
+        ? startOfToday.add(const Duration(days: 1))
+        : null;
+  }
+
   Future<void> _onProceedToBook() async {
     if (!_areStationsSelected) {
       await showAuthValidationDialog(
@@ -154,6 +162,9 @@ class _UnreservedETicketPageState extends State<UnreservedETicketPage> {
           seasonDateText: _seasonDateOption == _SeasonDateOption.nextDate
               ? 'Next Date'
               : 'Current Date',
+          bookingStartDate: _ticketType == _TicketType.season
+              ? _seasonBookingStartDate()
+              : null,
         ),
       ),
     );

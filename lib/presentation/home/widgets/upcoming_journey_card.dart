@@ -1,13 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:rail_one/core/di/injection.dart';
+import 'package:rail_one/core/storage/local_storage_service.dart';
+import 'package:rail_one/core/storage/models/stored_booking.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
+import 'package:rail_one/presentation/home/pages/booking_details_page.dart';
+import 'package:rail_one/presentation/home/pages/unreserved_e_ticket_page.dart';
+import 'package:rail_one/presentation/home/pages/unreserved_journey_page.dart';
 
-class UpcomingJourneySection extends StatelessWidget {
+class UpcomingJourneySection extends StatefulWidget {
   const UpcomingJourneySection({super.key});
 
+  @override
+  State<UpcomingJourneySection> createState() => _UpcomingJourneySectionState();
+}
+
+class _UpcomingJourneySectionState extends State<UpcomingJourneySection> {
   static const _horizontalPadding = 40.0;
+
+  StoredBooking? _latestBooking;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestBooking();
+  }
+
+  Future<void> _loadLatestBooking() async {
+    final stored = await sl<LocalStorageService>().getActiveBookings();
+    if (!mounted) return;
+
+    final upcoming = stored
+        .where((b) => b.status != 'completed' && b.status != 'cancelled')
+        .toList();
+
+    setState(() {
+      _latestBooking = upcoming.isNotEmpty ? upcoming.first : null;
+      _loading = false;
+    });
+  }
+
+  void _openBookingDetails(StoredBooking booking) {
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => BookingDetailsPage(booking: booking),
+          ),
+        )
+        .then((_) {
+          if (mounted) _loadLatestBooking();
+        });
+  }
+
+  void _openBookingPage() {
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute<void>(builder: (_) => UnreservedETicketPage()),
+        )
+        .then((_) {
+          if (mounted) _loadLatestBooking();
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const SizedBox.shrink();
+    }
+
+    if (_latestBooking == null) {
+      return const SizedBox.shrink();
+    }
+
+    final booking = _latestBooking!;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 24, 8, 24),
       child: Column(
@@ -18,9 +84,13 @@ class UpcomingJourneySection extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 14),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
-            child: _TicketCard(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+            child: _TicketCard(
+              booking: booking,
+              onBookAgain: () => _openBookingPage(),
+              onViewDetails: () => _openBookingDetails(booking),
+            ),
           ),
         ],
       ),
@@ -29,7 +99,15 @@ class UpcomingJourneySection extends StatelessWidget {
 }
 
 class _TicketCard extends StatelessWidget {
-  const _TicketCard();
+  const _TicketCard({
+    required this.booking,
+    required this.onBookAgain,
+    required this.onViewDetails,
+  });
+
+  final StoredBooking booking;
+  final VoidCallback onBookAgain;
+  final VoidCallback onViewDetails;
 
   static const _divider = Divider(
     height: 1,
@@ -46,8 +124,8 @@ class _TicketCard extends StatelessWidget {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.ticketGradientStart,
-              AppColors.ticketGradientEnd,
+              Color.fromARGB(255, 89, 21, 161),
+              Color.fromARGB(255, 201, 149, 201),
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -58,9 +136,10 @@ class _TicketCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Thu, 23 Apr 26',
-                style: TextStyle(
+              SizedBox(height: 20),
+              Text(
+                booking.formattedBookingDate,
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
@@ -70,27 +149,36 @@ class _TicketCard extends StatelessWidget {
               const SizedBox(height: 10),
               _divider,
               const SizedBox(height: 10),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'BHAYANDAR',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: 0.4,
+                  Expanded(
+                    child: Text(
+                      booking.sourceStationName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  Text(
-                    'ANDHERI',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      letterSpacing: 0.4,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      booking.destinationStationName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
                 ],
@@ -106,7 +194,7 @@ class _TicketCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: AppColors.unreservedGreen,
                     ),
                   ),
@@ -114,14 +202,20 @@ class _TicketCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _TicketActionButton(label: 'Book Again', onTap: () {}),
+                      _TicketActionButton(
+                        label: 'Book Again',
+                        onTap: onBookAgain,
+                      ),
                       const SizedBox(width: 8),
-                      _TicketActionButton(label: 'View Details', onTap: () {}),
+                      _TicketActionButton(
+                        label: 'View Details',
+                        onTap: onViewDetails,
+                      ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
             ],
           ),
         ),

@@ -23,7 +23,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   static const _previewAccent = Color(0xFF9081DA);
   static const _previewDuration = Duration(minutes: 5);
   static const _contentBg = Color(0xFFECECEC);
-  static const _dateOrange = Color(0xFFF57C00);
+  static const _dateOrange = Color(0xFFE8870B);
 
   final _storage = sl<LocalStorageService>();
   Timer? _timer;
@@ -114,11 +114,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     return 1 - (remaining / totalSeconds);
   }
 
-  Widget _dashedDivider({Color color = _contentBg}) {
+  Widget _dashedDivider({Color color = AppColors.borderLight}) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const dashWidth = 5.0;
-        const dashSpace = 4.0;
+        const dashWidth = 2.0;
+        const dashSpace = 2.0;
         final dashCount = (constraints.maxWidth / (dashWidth + dashSpace))
             .floor()
             .clamp(1, 120);
@@ -156,7 +156,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             style: TextStyle(
               fontFamily: hindi ? 'NotoSans' : 'Poppins',
               fontSize: hindi ? 18 : 16,
-              fontWeight: hindi ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: hindi ? FontWeight.w700 : FontWeight.w700,
               letterSpacing: 1,
               color: AppColors.authFieldIcon,
             ),
@@ -331,15 +331,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                             'Ticket Booking Date & Time',
                                             style: TextStyle(
                                               fontFamily: 'Poppins',
-                                              fontSize: 12,
-                                              color: AppColors.logoMuted,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.authFieldIcon,
                                             ),
                                           ),
                                           Text(
                                             _booking.formattedBookedOnDateTime,
                                             style: TextStyle(
                                               fontFamily: 'Poppins',
-                                              fontSize: 32,
+                                              fontSize: 30,
                                               fontWeight: FontWeight.w500,
                                               color: _dateOrange,
                                             ),
@@ -349,21 +350,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                             _booking.receiptCode.toUpperCase(),
                                             style: TextStyle(
                                               fontFamily: 'Poppins',
-                                              fontSize: 12,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.8,
-                                              ),
+                                              fontSize: 14,
+                                              color: Colors.white,
                                             ),
                                           ),
-                                          const SizedBox(height: 4),
                                           Text(
                                             'Ticket is Non-Transferable',
                                             style: TextStyle(
                                               fontFamily: 'Poppins',
-                                              fontSize: 10,
-                                              color: Colors.white.withValues(
-                                                alpha: 0.75,
-                                              ),
+                                              fontSize: 14,
+                                              color: Colors.white,
                                             ),
                                           ),
                                         ],
@@ -390,7 +386,13 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                         ),
                       ),
                       Container(
-                        decoration: BoxDecoration(color: Colors.white),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(12),
+                            bottomRight: Radius.circular(12),
+                          ),
+                        ),
                         clipBehavior: Clip.antiAlias,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -410,10 +412,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                       Text(
                                         _booking.ticketCategoryLabel,
                                         style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.heading,
+                                          fontFamily: 'NotoSans',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.logoDark,
                                         ),
                                       ),
                                       const Spacer(),
@@ -438,7 +440,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                             fontFamily: 'Poppins',
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
-                                            color: AppColors.heading,
+                                            color: AppColors.logoDark,
                                           ),
                                         ),
                                       ),
@@ -458,7 +460,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                             fontFamily: 'Poppins',
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
-                                            color: AppColors.heading,
+                                            color: AppColors.logoDark,
                                           ),
                                         ),
                                       ),
@@ -478,15 +480,15 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                     rightLabel: '*Valid Till',
                                     rightValue: _booking.formattedValidTill,
                                   ),
-                                  const SizedBox(height: 14),
+                                  const SizedBox(height: 10),
                                   Text(
                                     _booking.fareSummaryLine.toUpperCase(),
                                     style: const TextStyle(
                                       fontFamily: 'Poppins',
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
                                       color: AppColors.logoDark,
-                                      letterSpacing: 0.2,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -504,10 +506,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                   child: _dashedDivider(),
                                 ),
                                 Positioned(
-                                  left: -9,
+                                  left: -12,
                                   child: Container(
-                                    width: 24,
-                                    height: 24,
+                                    width: 30,
+                                    height: 30,
                                     decoration: BoxDecoration(
                                       color: _contentBg,
                                       shape: BoxShape.circle,
@@ -515,10 +517,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                   ),
                                 ),
                                 Positioned(
-                                  right: -9,
+                                  right: -12,
                                   child: Container(
-                                    width: 24,
-                                    height: 24,
+                                    width: 30,
+                                    height: 30,
                                     decoration: BoxDecoration(
                                       color: _contentBg,
                                       shape: BoxShape.circle,
@@ -530,7 +532,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             Padding(
                               padding: const EdgeInsets.fromLTRB(
                                 14,
-                                10,
+                                18,
                                 14,
                                 12,
                               ),
@@ -552,7 +554,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                 ],
                               ),
                             ),
-                            Container(height: 4, color: AppColors.primary),
+                            Container(
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: _previewAccent,
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(12),
+                                  bottomRight: Radius.circular(12),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -569,10 +580,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           'handset or perform factory reset.',
                           style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
                             color: AppColors.authError,
-                            height: 1.4,
+                            height: 1,
                           ),
                         ),
                       ),
@@ -588,14 +599,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                           borderRadius: BorderRadius.circular(24),
                           child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            padding: EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               'Upgrade to Superfast',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
                                 color: Colors.white,
                               ),
                             ),
@@ -610,7 +621,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(48, 8, 48, 8),
+                          padding: const EdgeInsets.fromLTRB(48, 0, 48, 0),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final size = constraints.maxWidth * 0.72;
@@ -635,7 +646,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
                         decoration: const BoxDecoration(color: Colors.white),
@@ -692,7 +703,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 64),
                     ],
                   ),
                 ),
@@ -720,14 +731,14 @@ class _BookingDetailRow extends StatelessWidget {
 
   static const _labelStyle = TextStyle(
     fontFamily: 'Poppins',
-    fontSize: 10,
-    fontWeight: FontWeight.w400,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
     color: AppColors.logoMuted,
   );
 
   static const _valueStyle = TextStyle(
     fontFamily: 'Poppins',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: FontWeight.w500,
     color: AppColors.logoDark,
   );

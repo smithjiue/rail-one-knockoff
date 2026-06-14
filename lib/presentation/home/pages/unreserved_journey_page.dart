@@ -21,12 +21,14 @@ class UnreservedJourneyPage extends StatefulWidget {
     required this.destinationStation,
     this.isSeasonTicket = false,
     this.seasonDateText,
+    this.bookingStartDate,
   });
 
   final String sourceStation;
   final String destinationStation;
   final bool isSeasonTicket;
   final String? seasonDateText;
+  final DateTime? bookingStartDate;
 
   static String formatJourneyStation(String fieldDisplay) {
     final parts = fieldDisplay.split(' - ');
@@ -477,9 +479,7 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
       distanceKm: distanceKm,
       fullFare: totalFare.toDouble(),
       isSeasonTicket: widget.isSeasonTicket,
-      trainTypeLabel: _trainType == _TrainType.acEmu
-          ? 'AC EMU TRAIN'
-          : 'ORDINARY',
+      trainTypeLabel: _trainType == _TrainType.acEmu ? 'AC EMU' : 'ORDINARY',
       travelClassLabel: _travelClass == _TravelClass.first ? 'FIRST' : 'SECOND',
       ticketTypeLabel: widget.isSeasonTicket
           ? _seasonDurationLabel()
@@ -491,6 +491,7 @@ class _UnreservedJourneyPageState extends State<UnreservedJourneyPage> {
       seasonDurationLabel: widget.isSeasonTicket
           ? _seasonDurationLabel()
           : null,
+      bookingStartDate: widget.bookingStartDate,
       discountPercent: discountPercent,
     );
 

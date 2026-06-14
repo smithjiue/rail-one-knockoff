@@ -19,6 +19,7 @@ class TicketBookingDraft {
     required this.childCount,
     this.seasonDurationLabel,
     this.discountPercent = 3,
+    this.bookingStartDate,
   });
 
   final String sourceStationName;
@@ -35,6 +36,7 @@ class TicketBookingDraft {
   final int childCount;
   final String? seasonDurationLabel;
   final int discountPercent;
+  final DateTime? bookingStartDate;
 }
 
 /// Persisted booking for a user (Hive / local DB).
@@ -102,12 +104,13 @@ class StoredBooking extends Equatable {
     required String paymentMethod,
   }) {
     final now = DateTime.now();
+    final bookedAt = draft.bookingStartDate ?? now;
     final seasonEnd = draft.isSeasonTicket && draft.seasonDurationLabel != null
-        ? _seasonEndDate(now, draft.seasonDurationLabel!)
+        ? _seasonEndDate(bookedAt, draft.seasonDurationLabel!)
         : null;
     final expiresAt = draft.isSeasonTicket && seasonEnd != null
         ? seasonEnd.add(const Duration(hours: 24))
-        : now.add(const Duration(hours: 24));
+        : bookedAt.add(const Duration(hours: 24));
 
     return StoredBooking(
       id: _generateId(),
@@ -130,7 +133,7 @@ class StoredBooking extends Equatable {
           : draft.ticketTypeLabel,
       adultCount: draft.adultCount,
       childCount: draft.childCount,
-      bookedAt: now,
+      bookedAt: bookedAt,
       expiresAt: expiresAt,
       seasonDurationLabel: draft.seasonDurationLabel,
       seasonEndDate: seasonEnd,
@@ -166,8 +169,7 @@ class StoredBooking extends Equatable {
 
   String get formattedBookingDate => _formatDisplayDate(bookedAt);
 
-  String get routeMeta =>
-      '${distanceKm % 1 == 0 ? distanceKm.toInt() : distanceKm.toStringAsFixed(1)} km';
+  String get routeMeta => '${distanceKm.ceil()} km';
 
   String get ticketCategoryLabel =>
       isSeasonTicket ? 'Season Ticket' : 'Journey Ticket';

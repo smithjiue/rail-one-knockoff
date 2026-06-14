@@ -19,14 +19,15 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
-  _BookingFilter _filter = _BookingFilter.all;
+  _BookingFilter _filter = _BookingFilter.upcoming;
   List<StoredBooking> _bookings = [];
   bool _loading = true;
 
   static const _upcomingOrange = Color(0xFFE8870B);
+  static const _filterUpcomingHighlight = Color(0xFFE9AB6A);
   static const _completedGreen = Color(0xFF2E9E5B);
-  static const _upcomingBorder = Color(0xFFE5C4A1);
-  static const _ticketBg = Color(0xFFFAFAFA);
+  static const _upcomingBorder = _upcomingOrange;
+  static const _ticketBg = Color(0xFFF6F6F6);
   static const _pageBg = Color(0xFFF5F5F5);
   static const _referenceMuted = Color(0xFF6B7280);
   static const _actionMuted = Color(0xFF757575);
@@ -84,8 +85,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   Widget _dashedDivider() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const dashWidth = 5.0;
-        const dashSpace = 4.0;
+        const dashWidth = 2.0;
+        const dashSpace = 2.0;
         final dashCount = (constraints.maxWidth / (dashWidth + dashSpace))
             .floor()
             .clamp(1, 100);
@@ -95,7 +96,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               padding: const EdgeInsets.only(right: dashSpace),
               child: SizedBox(
                 width: dashWidth,
-                height: 1,
+                height: 0.5,
                 child: ColoredBox(color: _upcomingBorder),
               ),
             );
@@ -120,8 +121,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
               color: color,
             ),
           ),
@@ -190,7 +191,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                               'Unreserved',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: kindText,
                               ),
@@ -224,7 +225,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -244,7 +245,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 8),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -256,9 +257,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.heading,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.logoDark,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -276,9 +277,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                               textAlign: TextAlign.end,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.heading,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.logoDark,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -421,7 +422,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w400,
             color: AppColors.authFieldIcon,
           ),
         ),
@@ -463,10 +464,31 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     }
 
     if (_filter != _BookingFilter.all) {
-      return ListView.builder(
+      final (title, color, showRefresh) = switch (_filter) {
+        _BookingFilter.upcoming => (
+          'Upcoming (${items.length})',
+          _upcomingOrange,
+          true,
+        ),
+        _BookingFilter.completed => (
+          'Completed (${items.length})',
+          _completedGreen,
+          false,
+        ),
+        _BookingFilter.cancelled => (
+          'Cancelled (${items.length})',
+          AppColors.authError,
+          false,
+        ),
+        _BookingFilter.all => ('', _upcomingOrange, false),
+      };
+
+      return ListView(
         padding: const EdgeInsets.only(bottom: 16),
-        itemCount: items.length,
-        itemBuilder: (context, index) => _bookingCard(items[index]),
+        children: [
+          _sectionHeader(title: title, color: color, showRefresh: showRefresh),
+          ...items.map(_bookingCard),
+        ],
       );
     }
 
@@ -509,6 +531,24 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     );
   }
 
+  (Color iconColor, Color labelColor) _filterTabColors(
+    _BookingFilter filter, {
+    required bool isSelected,
+  }) {
+    if (!isSelected) {
+      return (AppColors.logoMuted, AppColors.logoMuted);
+    }
+    return switch (filter) {
+      _BookingFilter.upcoming => (
+        _filterUpcomingHighlight,
+        _filterUpcomingHighlight,
+      ),
+      _BookingFilter.completed => (_completedGreen, _completedGreen),
+      _BookingFilter.cancelled => (AppColors.authError, AppColors.authError),
+      _BookingFilter.all => (AppColors.primary, AppColors.logoDark),
+    };
+  }
+
   Widget _filterBar() {
     const filters = [
       (_BookingFilter.upcoming, 'Upcoming'),
@@ -537,6 +577,10 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           children: filters.map((entry) {
             final (filter, label) = entry;
             final isSelected = _filter == filter;
+            final (iconColor, labelColor) = _filterTabColors(
+              filter,
+              isSelected: isSelected,
+            );
             return Expanded(
               child: Material(
                 color: isSelected
@@ -554,9 +598,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                         Icon(
                           Icons.confirmation_number_outlined,
                           size: 22,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.logoMuted,
+                          color: iconColor,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -567,9 +609,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.w400,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.logoMuted,
+                            color: labelColor,
                           ),
                         ),
                       ],
@@ -632,7 +672,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: Colors.white,
                           ),
                         ),
