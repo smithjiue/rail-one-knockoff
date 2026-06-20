@@ -39,6 +39,7 @@ class TicketQrCrypto {
       'adultCount': booking.adultCount,
       'childCount': booking.childCount,
       'bookedAt': booking.bookedAt.toUtc().toIso8601String(),
+      'bookedOnAt': booking.bookedOnAt.toUtc().toIso8601String(),
       'expiresAt': booking.expiresAt.toUtc().toIso8601String(),
       'validFrom': booking.formattedValidFrom,
       'validTill': booking.formattedValidTill,

@@ -61,6 +61,7 @@ class StoredBooking extends Equatable {
     required this.adultCount,
     required this.childCount,
     required this.bookedAt,
+    required this.bookedOnAt,
     required this.expiresAt,
     this.seasonDurationLabel,
     this.seasonEndDate,
@@ -88,6 +89,9 @@ class StoredBooking extends Equatable {
       adultCount: json['adultCount'] as int? ?? 1,
       childCount: json['childCount'] as int? ?? 0,
       bookedAt: DateTime.parse(json['bookedAt'] as String),
+      bookedOnAt: json['bookedOnAt'] == null
+          ? DateTime.parse(json['bookedAt'] as String)
+          : DateTime.parse(json['bookedOnAt'] as String),
       expiresAt: DateTime.parse(json['expiresAt'] as String),
       seasonDurationLabel: json['seasonDurationLabel'] as String?,
       seasonEndDate: json['seasonEndDate'] == null
@@ -134,6 +138,7 @@ class StoredBooking extends Equatable {
       adultCount: draft.adultCount,
       childCount: draft.childCount,
       bookedAt: bookedAt,
+      bookedOnAt: now,
       expiresAt: expiresAt,
       seasonDurationLabel: draft.seasonDurationLabel,
       seasonEndDate: seasonEnd,
@@ -160,6 +165,9 @@ class StoredBooking extends Equatable {
   final int adultCount;
   final int childCount;
   final DateTime bookedAt;
+
+  /// When payment completed (distinct from [bookedAt] travel/valid-from date).
+  final DateTime bookedOnAt;
   final DateTime expiresAt;
   final String? seasonDurationLabel;
   final DateTime? seasonEndDate;
@@ -181,7 +189,7 @@ class StoredBooking extends Equatable {
   String get receiptCode =>
       'R${id.length >= 5 ? id.substring(id.length - 5) : id.padLeft(5, '0')}';
 
-  String get formattedBookedOnDateTime => _formatDateTime(bookedAt);
+  String get formattedBookedOnDateTime => _formatDateTime(bookedOnAt);
 
   String get formattedValidFrom => _formatShortDate(bookedAt);
 
@@ -229,7 +237,7 @@ class StoredBooking extends Equatable {
     return '$day/$month/${local.year} $hour:$minute';
   }
 
-  String get formattedBookedOnLine => _formatBookedOnLine(bookedAt);
+  String get formattedBookedOnLine => _formatBookedOnLine(bookedOnAt);
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -251,6 +259,7 @@ class StoredBooking extends Equatable {
     'adultCount': adultCount,
     'childCount': childCount,
     'bookedAt': bookedAt.toUtc().toIso8601String(),
+    'bookedOnAt': bookedOnAt.toUtc().toIso8601String(),
     'expiresAt': expiresAt.toUtc().toIso8601String(),
     if (seasonDurationLabel != null) 'seasonDurationLabel': seasonDurationLabel,
     if (seasonEndDate != null)
@@ -307,5 +316,5 @@ class StoredBooking extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, userId, utsReference, bookedAt];
+  List<Object?> get props => [id, userId, utsReference, bookedAt, bookedOnAt];
 }

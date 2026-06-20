@@ -316,7 +316,7 @@ class LocalStorageService {
     final all = await _readBookingsForUser(userId);
     final now = DateTime.now();
     final active = all.where((b) => !now.isAfter(b.expiresAt)).toList()
-      ..sort((a, b) => b.bookedAt.compareTo(a.bookedAt));
+      ..sort((a, b) => b.bookedOnAt.compareTo(a.bookedOnAt));
 
     if (active.length != all.length) {
       await _database.putJsonList(

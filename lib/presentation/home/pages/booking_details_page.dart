@@ -9,6 +9,7 @@ import 'package:rail_one/core/storage/models/stored_booking.dart';
 import 'package:rail_one/core/theme/app_colors.dart';
 import 'package:rail_one/core/utils/ticket_qr_crypto.dart';
 import 'package:rail_one/presentation/auth/widgets/auth_validation_dialog.dart';
+import 'package:rail_one/presentation/home/widgets/animated_countdown.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   const BookingDetailsPage({super.key, required this.booking});
@@ -95,17 +96,13 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     return null;
   }
 
-  String get _countdownLabel {
-    final minutes = _previewRemaining.inMinutes
-        .remainder(60)
-        .toString()
-        .padLeft(2, '0');
-    final seconds = _previewRemaining.inSeconds
-        .remainder(60)
-        .toString()
-        .padLeft(2, '0');
-    return '$minutes:$seconds';
-  }
+  TextStyle get _countdownStyle => const TextStyle(
+    fontFamily: 'Poppins',
+    fontSize: 42,
+    fontWeight: FontWeight.w700,
+    color: AppColors.authError,
+    height: 1,
+  );
 
   double get _previewElapsedProgress {
     final totalSeconds = _previewDuration.inSeconds;
@@ -257,7 +254,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             Container(
               width: double.infinity,
               color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
                 'Thank You $_userName, Happy Journey !',
                 textAlign: TextAlign.left,
@@ -316,15 +313,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                             ),
                                           ),
                                           const SizedBox(height: 8),
-                                          Text(
-                                            _countdownLabel,
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 42,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.authError,
-                                              height: 1,
-                                            ),
+                                          AnimatedCountdown(
+                                            remaining: _previewRemaining,
+                                            style: _countdownStyle,
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
@@ -599,7 +590,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                           borderRadius: BorderRadius.circular(24),
                           child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8),
+                            padding: EdgeInsets.symmetric(vertical: 12),
                             child: Text(
                               'Upgrade to Superfast',
                               textAlign: TextAlign.center,
@@ -613,7 +604,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
